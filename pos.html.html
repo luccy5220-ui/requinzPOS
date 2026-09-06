@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LD Gadgets and Accessories Shop - Custom Category & Stock Manager</title>
+  <style>
+    /* ==========================================================================
+       CUSTOMIZATION SECTION: COLOR PALETTE & THEME VARIABLES
+       ========================================================================== */
+    :root {
+      /* Main Brand Colors */
+      --primary: #1d4ed8;               /* Header buttons, checkout button, key accents */
+      --primary-hover: #1e40af;         /* Hover state for primary buttons */
+      --primary-light: #eff6ff;         /* Light background tint for active states */
+
+      /* Structural Backgrounds & Surface Colors */
+      --bg-main: #f8fafc;               /* Main app background color */
+      --surface: #ffffff;               /* Cards, cart panel, and modal containers */
+      --border: #e2e8f0;                /* Soft dividers and container borders */
+
+      /* Text Colors */
+      --text-main: #0f172a;             /* Main headings and prominent text */
+      --text-muted: #64748b;            /* Secondary labels, sub-text, and icons */
+
+      /* Accent Colors */
+      --accent-green: #10b981;          /* Addition (₱) input label and positive status */
+      --accent-red: #ef4444;            /* Subtract (₱) input label, delete icons, stock alerts */
+      --accent-purple: #7c3aed;         /* PC Builder button and package tags */
+      --accent-purple-hover: #6d28d9;   /* Hover state for PC Builder button */
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: #0f172a;
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-header {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-header.secondary {
+      background: #334155;
+    }
+
+    .btn-header.secondary:hover {
+      background: #475569;
+    }
+
+    .btn-header.purple {
+      background: var(--accent-purple);
+    }
+
+    .btn-header.purple:hover {
+      background: var(--accent-purple-hover);
+    }
+
+    .btn-header:hover {
+      background: var(--primary-hover);
+    }
+
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left Section: Product Management */
+    .catalog-section {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .search-filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+    }
+
+    .category-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      max-width: 100%;
+    }
+
+    .chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .chip.active, .chip:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(29, 78, 216, 0.08);
+      border-color: var(--primary);
+    }
+
+    .product-card:hover .delete-item-btn {
+      opacity: 1;
+    }
+
+    .product-card.out-of-stock {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .product-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .product-tag {
+      font-size: 0.7rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .delete-item-btn {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-red);
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .delete-item-btn:hover {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .product-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .product-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .product-stock {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .product-stock.low {
+      color: var(--accent-red);
+    }
+
+    /* Right Section: Order/Cart Panel */
+    .cart-section {
+      flex: 1;
+      min-width: 380px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 16px rgba(0,0,0,0.02);
+    }
+
+    .cart-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--accent-red);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+    }
+
+    .cart-item-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      padding-right: 8px;
+    }
+
+    .cart-item-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .cart-item-unit {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .cart-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-qty {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      font-weight: bold;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-qty:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-remove-cart {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-remove-cart:hover {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .cart-summary {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background: #fafcff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 48vh;
+      overflow-y: auto;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .summary-line.total {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Adjustments Group Styles */
+    .adjustments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .adjustments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-row-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .input-row-container .reason-input {
+      flex: 1;
+      padding: 4px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .input-row-container .reason-input:focus {
+      border-color: var(--primary);
+    }
+
+    .input-row-container .amount-input {
+      width: 75px;
+      padding: 4px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      text-align: right;
+      font-weight: 600;
+      outline: none;
+      font-size: 0.85rem;
+    }
+
+    .input-row-container .amount-input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-add-adj {
+      background: none;
+      border: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .btn-add-adj.sub { color: var(--accent-red); }
+    .btn-add-adj.add { color: var(--accent-green); }
+
+    .btn-add-adj:hover {
+      text-decoration: underline;
+    }
+
+    .btn-remove-adj {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      padding: 0 4px;
+    }
+
+    .btn-remove-adj:hover {
+      color: var(--accent-red);
+    }
+
+    .btn-checkout {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);
+      transition: background 0.2s;
+    }
+
+    .btn-checkout:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-checkout:disabled {
+      background: #cbd5e1;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      width: 380px;
+      max-height: 85vh;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-card.wide {
+      width: 560px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .category-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .receipt-divider {
+      border-bottom: 1px dashed var(--border);
+    }
+
+    /* Receipt Customer Box */
+    .receipt-customer-box {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .receipt-customer-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .receipt-customer-input {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      width: 100%;
+    }
+
+    .receipt-customer-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* History & PC Sets Specific Styles */
+    .history-card, .pc-set-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pc-set-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .history-header, .pc-set-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pc-set-specs {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      white-space: pre-line;
+      line-height: 1.4;
+      background: var(--bg-main);
+      padding: 8px;
+      border-radius: 6px;
+    }
+
+    .pc-set-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 4px;
+    }
+
+    .pc-set-price {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--accent-purple);
+    }
+
+    .btn-add-set-cart {
+      background: var(--accent-purple);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-add-set-cart:hover {
+      background: var(--accent-purple-hover);
+    }
+
+    .history-items {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+    }
+
+    .history-item-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .history-total {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--primary);
+      padding-top: 4px;
+      border-top: 1px dashed var(--border);
+    }
+
+    /* Print Optimization Rules */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #receiptModal, #receiptModal * {
+        visibility: visible;
+      }
+      #receiptModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: transparent;
+        display: block !important;
+      }
+      #receiptModal .modal-card {
+        box-shadow: none;
+        border: none;
+        width: 100%;
+      }
+      #receiptModal button {
+        display: none;
+      }
+      .receipt-customer-input {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+      }
+    }
+
+    @media (max-width: 850px) {
+      .app-body {
+        flex-direction: column;
+      }
+      .cart-section {
+        min-width: 100%;
+        height: 50vh;
+      }
+      .modal-card.wide {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <span>LD Gadgets and Accessories Shop</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-header purple" onclick="openPcSetsModal()">🖥️ PC Sets Builder</button>
+      <button class="btn-header secondary" onclick="openHistoryModal()">📜 Transaction History</button>
+      <button class="btn-header secondary" onclick="openCategoryModal()">🏷️ Categories</button>
+      <button class="btn-header" onclick="openAddModal()">+ Add New Item</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- Left Catalog Section -->
+    <div class="catalog-section">
+      <div class="search-filter-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search products..." oninput="filterProducts()">
+        <div class="category-chips" id="categoryContainer"></div>
+      </div>
+
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <!-- Right Cart Section -->
+    <div class="cart-section">
+      <div class="cart-header">
+        <h3 style="font-weight: 700;">Current Order</h3>
+        <button class="clear-btn" onclick="clearCart()">Clear All</button>
+      </div>
+
+      <div class="cart-items" id="cartItems">
+        <div style="text-align: center; color: var(--text-muted); margin: auto;">
+          Cart is empty
+        </div>
+      </div>
+
+      <div class="cart-summary">
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <span id="subtotalVal">₱0.00</span>
+        </div>
+
+        <!-- Subtract List -->
+        <div>
+          <div class="adjustments-header" style="color: var(--accent-red);">
+            <span>Subtract</span>
+            <button class="btn-add-adj sub" onclick="addSubtractRow()">+ Add Row</button>
+          </div>
+          <div class="adjustments-list" id="subtractListContainer"></div>
+        </div>
+
+        <!-- Addition List -->
+        <div>
+          <div class="adjustments-header" style="color: var(--accent-green);">
+            <span>Addition</span>
+            <button class="btn-add-adj add" onclick="addAdditionRow()">+ Add Row</button>
+          </div>
+          <div class="adjustments-list" id="additionListContainer"></div>
+        </div>
+
+        <div class="summary-line total">
+          <span>Final Total</span>
+          <span id="totalVal">₱0.00</span>
+        </div>
+
+        <button class="btn-checkout" id="checkoutBtn" onclick="processCheckout()" disabled>Complete Transaction</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PC Sets Management Modal -->
+  <div class="modal-overlay" id="pcSetsModal">
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <span>🖥️ PC Package Sets & Pricing</span>
+        <button class="modal-close" onclick="closePcSetsModal()">&times;</button>
+      </div>
+
+      <form id="addPcSetForm" onsubmit="handleCreatePcSet(event)" style="display: flex; flex-direction: column; gap: 10px; background: var(--bg-main); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+        <div style="font-weight: 700; font-size: 0.85rem; color: var(--accent-purple);">CREATE NEW PC PACKAGE</div>
+        
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex: 2;">
+            <input type="text" id="pcSetName" required placeholder="Build Name (e.g., Budget Gaming PC - Tier 1)">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <input type="number" id="pcSetPrice" step="0.01" min="0" required placeholder="Package Price (₱)">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <textarea id="pcSetSpecs" rows="3" required placeholder="List Components/Specs (e.g., Ryzen 5 5600G, 16GB RAM, 500GB NVMe SSD, 24″ Monitor)"></textarea>
+        </div>
+
+        <button type="submit" class="btn-header purple" style="justify-content: center; width: 100%;">Save PC Package Set</button>
+      </form>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; max-height: 40vh; overflow-y: auto;" id="pcSetsContainer"></div>
+    </div>
+  </div>
+
+  <!-- Add Product / Stock Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>Add Stock Item</span>
+        <button class="modal-close" onclick="closeAddModal()">&times;</button>
+      </div>
+      <form id="addProductForm" onsubmit="handleAddProduct(event)">
+        <div class="form-group">
+          <label for="prodName">Item Name</label>
+          <input type="text" id="prodName" required placeholder="e.g., Wireless Mouse">
+        </div>
+        
+        <div class="form-group" style="margin-top: 6px;">
+          <label for="prodCategorySelect">Select Existing Category</label>
+          <select id="prodCategorySelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="newCategoryInline" style="font-size: 0.75rem; color: var(--primary);">Or Type A New Category</label>
+          <input type="text" id="newCategoryInline" placeholder="e.g., Hardware">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="prodPrice">Price (₱)</label>
+            <input type="number" id="prodPrice" step="0.01" min="0" required placeholder="150.00">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="prodStock">Stock Qty</label>
+            <input type="number" id="prodStock" min="1" required placeholder="20">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-checkout" style="margin-top: 16px;">Add to Inventory</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dynamic Categories Modal -->
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>Manage Categories</span>
+        <button class="modal-close" onclick="closeCategoryModal()">&times;</button>
+      </div>
+      <form onsubmit="handleCreateCategory(event)" style="display: flex; gap: 8px;">
+        <input type="text" id="newCatName" required placeholder="Enter category name..." style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+        <button type="submit" class="btn-header" style="white-space: nowrap;">Add</button>
+      </form>
+      <div style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;" id="categoryListContainer"></div>
+    </div>
+  </div>
+
+  <!-- Printable Receipt Modal -->
+  <div class="modal-overlay" id="receiptModal">
+    <div class="modal-card" style="width: 340px;">
+      <div class="modal-header" style="justify-content: center; font-size: 1.1rem; text-align: center;">
+        LD Gadgets and Accessories Shop
+      </div>
+      <div style="font-size: 0.8rem; text-align: center; color: var(--text-muted);" id="receiptDate">Transaction Receipt</div>
+      
+      <!-- Customer Box Section -->
+      <div class="receipt-customer-box">
+        <span class="receipt-customer-label">Customer Name</span>
+        <input type="text" id="receiptCustomerName" class="receipt-customer-input" placeholder="Enter customer name..." oninput="updateReceiptCustomer(this.value)">
+      </div>
+
+      <div class="receipt-divider"></div>
+      
+      <div id="receiptBody" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px;"></div>
+
+      <div class="receipt-divider"></div>
+      <div id="receiptSummary" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px;"></div>
+
+      <button class="btn-checkout" onclick="printReceiptAndClose()">Print & Close</button>
+    </div>
+  </div>
+
+  <!-- Transaction History Modal -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <span>Transaction History</span>
+        <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);" id="historyCount">Total Transactions: 0</span>
+        <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 60vh;" id="historyListContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       APP STATE & INITIAL DATA
+       ========================================================================== */
+    let categories = JSON.parse(localStorage.getItem('ld_categories')) || ['Accessories', 'Gadgets'];
+    let products = JSON.parse(localStorage.getItem('ld_products')) || [
+      { id: 1, name: 'USB-C Cable', category: 'Accessories', price: 150.00, stock: 15 },
+      { id: 2, name: 'Wireless Mouse', category: 'Gadgets', price: 350.00, stock: 8 }
+    ];
+    let pcSets = JSON.parse(localStorage.getItem('ld_pcSets')) || [];
+    let cart = [];
+    let subtractItems = [{ id: Date.now(), reason: '', amount: 0 }];
+    let additionItems = [{ id: Date.now() + 1, reason: '', amount: 0 }];
+    let transactions = JSON.parse(localStorage.getItem('ld_transactions')) || [];
+    let selectedCategory = 'All';
+    let currentReceiptTxnId = null;
+
+    function formatMoney(amount) {
+      return (Number(amount) || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function saveData() {
+      localStorage.setItem('ld_categories', JSON.stringify(categories));
+      localStorage.setItem('ld_products', JSON.stringify(products));
+      localStorage.setItem('ld_pcSets', JSON.stringify(pcSets));
+      localStorage.setItem('ld_transactions', JSON.stringify(transactions));
+    }
+
+    function formatNormalTime(date) {
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    }
+
+    /* ==========================================================================
+       DYNAMIC ADJUSTMENTS LOGIC (SUBTRACT & ADDITION)
+       ========================================================================== */
+    function renderAdjustments() {
+      // Render Subtractions
+      const subContainer = document.getElementById('subtractListContainer');
+      subContainer.innerHTML = subtractItems.map((item) => `
+        <div class="input-row-container">
+          <input type="text" class="reason-input" placeholder="Reason (e.g. Senior, Promo)" value="${item.reason}" oninput="updateAdjustment('sub', ${item.id}, 'reason', this.value)">
+          <input type="number" class="amount-input" min="0" step="0.01" placeholder="0.00" value="${item.amount || ''}" oninput="updateAdjustment('sub', ${item.id}, 'amount', this.value)">
+          ${subtractItems.length > 1 ? `<button class="btn-remove-adj" onclick="removeAdjustmentRow('sub', ${item.id})">&times;</button>` : ''}
+        </div>
+      `).join('');
+
+      // Render Additions
+      const addContainer = document.getElementById('additionListContainer');
+      addContainer.innerHTML = additionItems.map((item) => `
+        <div class="input-row-container">
+          <input type="text" class="reason-input" placeholder="Reason (e.g. Delivery, Fee)" value="${item.reason}" oninput="updateAdjustment('add', ${item.id}, 'reason', this.value)">
+          <input type="number" class="amount-input" min="0" step="0.01" placeholder="0.00" value="${item.amount || ''}" oninput="updateAdjustment('add', ${item.id}, 'amount', this.value)">
+          ${additionItems.length > 1 ? `<button class="btn-remove-adj" onclick="removeAdjustmentRow('add', ${item.id})">&times;</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function addSubtractRow() {
+      subtractItems.push({ id: Date.now(), reason: '', amount: 0 });
+      renderAdjustments();
+      updateCart();
+    }
+
+    function addAdditionRow() {
+      additionItems.push({ id: Date.now(), reason: '', amount: 0 });
+      renderAdjustments();
+      updateCart();
+    }
+
+    function removeAdjustmentRow(type, id) {
+      if (type === 'sub') {
+        subtractItems = subtractItems.filter(item => item.id !== id);
+      } else {
+        additionItems = additionItems.filter(item => item.id !== id);
+      }
+      renderAdjustments();
+      updateCart();
+    }
+
+    function updateAdjustment(type, id, field, value) {
+      const list = type === 'sub' ? subtractItems : additionItems;
+      const item = list.find(i => i.id === id);
+      if (item) {
+        if (field === 'amount') {
+          item.amount = parseFloat(value) || 0;
+        } else {
+          item.reason = value;
+        }
+      }
+      updateCart();
+    }
+
+    /* ==========================================================================
+       CATALOG & CATEGORY RENDERING
+       ========================================================================== */
+    function renderCategoryChips() {
+      const container = document.getElementById('categoryContainer');
+      let html = `<button class="chip ${selectedCategory === 'All' ? 'active' : ''}" onclick="setCategory('All')">All Items</button>`;
+      
+      categories.forEach(cat => {
+        html += `<button class="chip ${selectedCategory === cat ? 'active' : ''}" onclick="setCategory('${cat}')">${cat}</button>`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderCategoryDropdown() {
+      const select = document.getElementById('prodCategorySelect');
+      if (categories.length === 0) {
+        select.innerHTML = `<option value="">-- No categories saved yet --</option>`;
+      } else {
+        select.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+      }
+    }
+
+    function renderCategoryManageList() {
+      const container = document.getElementById('categoryListContainer');
+      if (categories.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">No categories created yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = categories.map(cat => `
+        <div class="category-list-item">
+          <span>${cat}</span>
+          <button class="delete-item-btn" style="opacity:1" onclick="deleteCategory('${cat}')">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+      const filtered = products.filter(p => {
+        const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+        const matchesSearch = p.name.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">No items found. Click "+ Add New Item" to create one.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        const isOutOfStock = p.stock <= 0;
+        return `
+          <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" onclick="addToCart('${p.id}')">
+            <div>
+              <div class="product-header-row">
+                <span class="product-tag">${p.category}</span>
+                <button class="delete-item-btn" title="Remove Product" onclick="removeProduct(event, '${p.id}')">&times;</button>
+              </div>
+              <div class="product-title">${p.name}</div>
+            </div>
+            <div class="product-footer">
+              <span class="product-price">₱${formatMoney(p.price)}</span>
+              <span class="product-stock ${p.stock <= 3 ? 'low' : ''}">${isOutOfStock ? 'Out of Stock' : p.stock + ' left'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setCategory(category) {
+      selectedCategory = category;
+      renderCategoryChips();
+      renderProducts();
+    }
+
+    function filterProducts() {
+      renderProducts();
+    }
+
+    /* ==========================================================================
+       MODAL CONTROL FUNCTIONS
+       ========================================================================== */
+    function openAddModal() {
+      renderCategoryDropdown();
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+      document.getElementById('addProductForm').reset();
+    }
+
+    function openCategoryModal() {
+      renderCategoryManageList();
+      document.getElementById('categoryModal').classList.add('active');
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('categoryModal').classList.remove('active');
+    }
+
+    function openHistoryModal() {
+      renderHistoryList();
+      document.getElementById('historyModal').classList.add('active');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.remove('active');
+    }
+
+    function openPcSetsModal() {
+      renderPcSetsList();
+      document.getElementById('pcSetsModal').classList.add('active');
+    }
+
+    function closePcSetsModal() {
+      document.getElementById('pcSetsModal').classList.remove('active');
+      document.getElementById('addPcSetForm').reset();
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.remove('active');
+    }
+
+    function printReceiptAndClose() {
+      window.print();
+      closeReceiptModal();
+    }
+
+    /* ==========================================================================
+       INVENTORY & STOCK LOGIC
+       ========================================================================== */
+    function handleAddProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('prodName').value.trim();
+      const selectedCat = document.getElementById('prodCategorySelect').value;
+      const inlineCat = document.getElementById('newCategoryInline').value.trim();
+      const price = parseFloat(document.getElementById('prodPrice').value);
+      const stock = parseInt(document.getElementById('prodStock').value);
+
+      let finalCategory = inlineCat || selectedCat || 'Uncategorized';
+
+      if (inlineCat && !categories.includes(inlineCat)) {
+        categories.push(inlineCat);
+      }
+
+      const newProduct = {
+        id: Date.now().toString(),
+        name: name,
+        category: finalCategory,
+        price: price,
+        stock: stock
+      };
+
+      products.push(newProduct);
+      saveData();
+      renderCategoryChips();
+      renderProducts();
+      closeAddModal();
+    }
+
+    function removeProduct(e, id) {
+      e.stopPropagation();
+      const targetId = String(id);
+      const p = products.find(prod => String(prod.id) === targetId);
+      if (p && confirm(`Delete "${p.name}" from inventory?`)) {
+        products = products.filter(prod => String(prod.id) !== targetId);
+        cart = cart.filter(item => String(item.id) !== targetId);
+        saveData();
+        renderProducts();
+        updateCart();
+      }
+    }
+
+    /* ==========================================================================
+       CATEGORY MANAGEMENT LOGIC
+       ========================================================================== */
+    function handleCreateCategory(e) {
+      e.preventDefault();
+      const input = document.getElementById('newCatName');
+      const newCat = input.value.trim();
+      
+      if (newCat && !categories.includes(newCat)) {
+        categories.push(newCat);
+        saveData();
+        input.value = '';
+        renderCategoryChips();
+        renderCategoryDropdown();
+        renderCategoryManageList();
+      }
+    }
+
+    function deleteCategory(catName) {
+      if (confirm(`Delete "${catName}" category? Products in this category will be reset to "Uncategorized".`)) {
+        categories = categories.filter(c => c !== catName);
+        products.forEach(p => {
+          if (p.category === catName) p.category = 'Uncategorized';
+        });
+        if (selectedCategory === catName) selectedCategory = 'All';
+        saveData();
+        renderCategoryChips();
+        renderCategoryManageList();
+        renderProducts();
+      }
+    }
+
+    /* ==========================================================================
+       PC SETS MANAGEMENT LOGIC
+       ========================================================================== */
+    function handleCreatePcSet(e) {
+      e.preventDefault();
+      const name = document.getElementById('pcSetName').value.trim();
+      const price = parseFloat(document.getElementById('pcSetPrice').value);
+      const specs = document.getElementById('pcSetSpecs').value.trim();
+
+      const newSet = {
+        id: 'pc_' + Date.now().toString(),
+        name,
+        price,
+        specs
+      };
+
+      pcSets.push(newSet);
+      saveData();
+      renderPcSetsList();
+      document.getElementById('addPcSetForm').reset();
+    }
+
+    function deletePcSet(id) {
+      const targetId = String(id);
+      if (confirm('Delete this PC package set?')) {
+        pcSets = pcSets.filter(s => String(s.id) !== targetId);
+        cart = cart.filter(item => String(item.id) !== targetId);
+        saveData();
+        renderPcSetsList();
+        updateCart();
+      }
+    }
+
+    function renderPcSetsList() {
+      const container = document.getElementById('pcSetsContainer');
+      if (pcSets.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">No PC package sets created yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = pcSets.map(set => `
+        <div class="pc-set-card">
+          <div class="pc-set-header">
+            <span>${set.name}</span>
+            <button class="delete-item-btn" style="opacity: 1;" onclick="deletePcSet('${set.id}')">&times;</button>
+          </div>
+          <div class="pc-set-specs">${set.specs}</div>
+          <div class="pc-set-footer">
+            <span class="pc-set-price">₱${formatMoney(set.price)}</span>
+            <button class="btn-add-set-cart" onclick="addPcSetToCart('${set.id}')">+ Add Package to Cart</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addPcSetToCart(setId) {
+      const targetId = String(setId);
+      const set = pcSets.find(s => String(s.id) === targetId);
+      if (!set) return;
+
+      const existing = cart.find(item => String(item.id) === targetId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          id: set.id,
+          name: `[PC Package] ${set.name}`,
+          price: set.price,
+          qty: 1,
+          isPcSet: true
+        });
+      }
+
+      updateCart();
+      closePcSetsModal();
+    }
+
+    /* ==========================================================================
+       CART & CHECKOUT LOGIC
+       ========================================================================== */
+    function addToCart(productId) {
+      const targetId = String(productId);
+      const product = products.find(p => String(p.id) === targetId);
+      if (!product || product.stock <= 0) return;
+
+      const cartItem = cart.find(item => String(item.id) === targetId);
+      if (cartItem) {
+        if (cartItem.qty < product.stock) {
+          cartItem.qty += 1;
+        } else {
+          alert('Maximum available stock reached for this item.');
+        }
+      } else {
+        cart.push({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          qty: 1,
+          isPcSet: false
+        });
+      }
+
+      updateCart();
+    }
+
+    function changeCartQty(e, id, delta) {
+      if (e) e.stopPropagation();
+      const targetId = String(id);
+      const cartItem = cart.find(item => String(item.id) === targetId);
+      if (!cartItem) return;
+
+      if (!cartItem.isPcSet) {
+        const product = products.find(p => String(p.id) === targetId);
+        if (delta > 0 && product && cartItem.qty >= product.stock) {
+          alert('Maximum available stock reached.');
+          return;
+        }
+      }
+
+      cartItem.qty += delta;
+
+      if (cartItem.qty <= 0) {
+        cart = cart.filter(item => String(item.id) !== targetId);
+      }
+
+      updateCart();
+    }
+
+    function removeFromCart(e, id) {
+      if (e) e.stopPropagation();
+      const targetId = String(id);
+      cart = cart.filter(item => String(item.id) !== targetId);
+      updateCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      subtractItems = [{ id: Date.now(), reason: '', amount: 0 }];
+      additionItems = [{ id: Date.now() + 1, reason: '', amount: 0 }];
+      renderAdjustments();
+      updateCart();
+    }
+
+    function updateCart() {
+      const container = document.getElementById('cartItems');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+
+      if (cart.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin: auto;">Cart is empty</div>`;
+        document.getElementById('subtotalVal').innerText = '₱0.00';
+        document.getElementById('totalVal').innerText = '₱0.00';
+        checkoutBtn.disabled = true;
+        return;
+      }
+
+      let subtotal = 0;
+      container.innerHTML = cart.map(item => {
+        const itemTotal = item.price * item.qty;
+        subtotal += itemTotal;
+        return `
+          <div class="cart-item">
+            <div class="cart-item-details">
+              <span class="cart-item-name">${item.name}</span>
+              <span class="cart-item-unit">₱${formatMoney(item.price)} × ${item.qty} = ₱${formatMoney(itemTotal)}</span>
+            </div>
+            <div class="cart-controls">
+              <button class="btn-qty" onclick="changeCartQty(event, '${item.id}', -1)">-</button>
+              <span style="font-weight: 700; font-size: 0.9rem; min-width: 18px; text-align: center;">${item.qty}</span>
+              <button class="btn-qty" onclick="changeCartQty(event, '${item.id}', 1)">+</button>
+              <button class="btn-remove-cart" onclick="removeFromCart(event, '${item.id}')" title="Remove Item">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const totalSubtract = subtractItems.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const totalAddition = additionItems.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const total = Math.max(0, subtotal - totalSubtract + totalAddition);
+
+      document.getElementById('subtotalVal').innerText = `₱${formatMoney(subtotal)}`;
+      document.getElementById('totalVal').innerText = `₱${formatMoney(total)}`;
+      checkoutBtn.disabled = false;
+    }
+
+    function processCheckout() {
+      if (cart.length === 0) return;
+
+      let subtotal = 0;
+
+      // Check physical stock
+      for (let item of cart) {
+        if (!item.isPcSet) {
+          const product = products.find(p => String(p.id) === String(item.id));
+          if (product && product.stock < item.qty) {
+            alert(`Insufficient stock for "${product.name}". Only ${product.stock} left.`);
+            return;
+          }
+        }
+      }
+
+      // Deduct inventory
+      cart.forEach(item => {
+        if (!item.isPcSet) {
+          const product = products.find(p => String(p.id) === String(item.id));
+          if (product) product.stock -= item.qty;
+        }
+        subtotal += item.price * item.qty;
+      });
+
+      // Filter active non-zero adjustments
+      const activeSubtracts = subtractItems
+        .filter(item => item.amount > 0)
+        .map(item => ({
+          reason: item.reason.trim() || 'Discount',
+          amount: item.amount
+        }));
+
+      const activeAdditions = additionItems
+        .filter(item => item.amount > 0)
+        .map(item => ({
+          reason: item.reason.trim() || 'Add-on',
+          amount: item.amount
+        }));
+
+      const totalSubtract = activeSubtracts.reduce((sum, item) => sum + item.amount, 0);
+      const totalAddition = activeAdditions.reduce((sum, item) => sum + item.amount, 0);
+      const total = Math.max(0, subtotal - totalSubtract + totalAddition);
+
+      const transactionDate = new Date();
+
+      const transaction = {
+        id: 'TXN-' + Date.now().toString().slice(-6),
+        customerName: '',
+        date: formatNormalTime(transactionDate),
+        items: [...cart],
+        subtotal,
+        subtracts: activeSubtracts,
+        additions: activeAdditions,
+        total
+      };
+
+      transactions.unshift(transaction);
+      saveData();
+      renderProducts();
+
+      // Show Receipt Modal
+      showReceipt(transaction);
+
+      // Reset Cart
+      clearCart();
+    }
+
+    /* ==========================================================================
+       RECEIPT & HISTORY DISPLAY LOGIC
+       ========================================================================== */
+    function updateReceiptCustomer(val) {
+      if (currentReceiptTxnId) {
+        const txn = transactions.find(t => t.id === currentReceiptTxnId);
+        if (txn) {
+          txn.customerName = val;
+          saveData();
+        }
+      }
+    }
+
+    function showReceipt(txn) {
+      currentReceiptTxnId = txn.id;
+      document.getElementById('receiptDate').innerText = `Date: ${txn.date} | ID: ${txn.id}`;
+      document.getElementById('receiptCustomerName').value = txn.customerName || '';
+
+      document.getElementById('receiptBody').innerHTML = txn.items.map(item => `
+        <div style="display: flex; justify-content: space-between;">
+          <span>${item.name} (x${item.qty})</span>
+          <span>₱${formatMoney(item.price * item.qty)}</span>
+        </div>
+      `).join('');
+
+      let summaryHtml = `
+        <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+          <span>Subtotal</span>
+          <span>₱${formatMoney(txn.subtotal)}</span>
+        </div>
+      `;
+
+      if (txn.subtracts && txn.subtracts.length > 0) {
+        txn.subtracts.forEach(sub => {
+          summaryHtml += `
+            <div style="display: flex; justify-content: space-between; color: var(--accent-red);">
+              <span>${sub.reason} (-)</span>
+              <span>-₱${formatMoney(sub.amount)}</span>
+            </div>
+          `;
+        });
+      }
+
+      if (txn.additions && txn.additions.length > 0) {
+        txn.additions.forEach(add => {
+          summaryHtml += `
+            <div style="display: flex; justify-content: space-between; color: var(--accent-green);">
+              <span>${add.reason} (+)</span>
+              <span>+₱${formatMoney(add.amount)}</span>
+            </div>
+          `;
+        });
+      }
+
+      summaryHtml += `
+        <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border);">
+          <span>Total Amount Paid</span>
+          <span>₱${formatMoney(txn.total)}</span>
+        </div>
+      `;
+
+      document.getElementById('receiptSummary').innerHTML = summaryHtml;
+      document.getElementById('receiptModal').classList.add('active');
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      document.getElementById('historyCount').innerText = `Total Transactions: ${transactions.length}`;
+
+      if (transactions.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">No transaction history available.</div>`;
+        return;
+      }
+
+      container.innerHTML = transactions.map(txn => `
+        <div class="history-card">
+          <div class="history-header">
+            <span>${txn.id} ${txn.customerName ? `<span style="font-weight: 400; color: var(--primary);">(${txn.customerName})</span>` : ''}</span>
+            <span style="font-size: 0.78rem; color: var(--text-muted);">${txn.date}</span>
+          </div>
+          <div class="history-items">
+            ${txn.items.map(i => `
+              <div class="history-item-row">
+                <span>${i.name} × ${i.qty}</span>
+                <span>₱${formatMoney(i.price * i.qty)}</span>
+              </div>
+            `).join('')}
+          </div>
+          ${txn.subtracts && txn.subtracts.length > 0 ? txn.subtracts.map(s => `
+            <div style="font-size:0.8rem; color:var(--accent-red); display:flex; justify-content:space-between;">
+              <span>${s.reason}</span><span>-₱${formatMoney(s.amount)}</span>
+            </div>
+          `).join('') : ''}
+          ${txn.additions && txn.additions.length > 0 ? txn.additions.map(a => `
+            <div style="font-size:0.8rem; color:var(--accent-green); display:flex; justify-content:space-between;">
+              <span>${a.reason}</span><span>+₱${formatMoney(a.amount)}</span>
+            </div>
+          `).join('') : ''}
+          <div class="history-total">
+            <span>Total Paid</span>
+            <span>₱${formatMoney(txn.total)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function clearHistory() {
+      if (confirm('Clear all recorded transactions? This action cannot be undone.')) {
+        transactions = [];
+        saveData();
+        renderHistoryList();
+      }
+    }
+
+    /* ==========================================================================
+       INITIALIZATION ON LOAD
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCategoryChips();
+      renderProducts();
+      renderAdjustments();
+    });
+  </script>
+</body>
+</html>
